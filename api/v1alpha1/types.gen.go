@@ -219,6 +219,18 @@ type BatchSequence struct {
 	Strategy RolloutStrategy `json:"strategy"`
 }
 
+// CatalogApplicationProvider defines model for CatalogApplicationProvider.
+type CatalogApplicationProvider struct {
+	// Channel Reference to the channel for the application package.
+	Channel string `json:"channel"`
+
+	// Package Reference to the name for the application package.
+	Package string `json:"package"`
+
+	// Source Reference to the catalog for the application package.
+	Source string `json:"source"`
+}
+
 // CertificateSigningRequest CertificateSigningRequest represents a request for a signed certificate from the CA.
 type CertificateSigningRequest struct {
 	// ApiVersion APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources.
@@ -1638,6 +1650,32 @@ func (t *ApplicationProviderSpec) FromImageApplicationProvider(v ImageApplicatio
 
 // MergeImageApplicationProvider performs a merge with any union data inside the ApplicationProviderSpec, using the provided ImageApplicationProvider
 func (t *ApplicationProviderSpec) MergeImageApplicationProvider(v ImageApplicationProvider) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCatalogApplicationProvider returns the union data inside the ApplicationProviderSpec as a CatalogApplicationProvider
+func (t ApplicationProviderSpec) AsCatalogApplicationProvider() (CatalogApplicationProvider, error) {
+	var body CatalogApplicationProvider
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCatalogApplicationProvider overwrites any union data inside the ApplicationProviderSpec as the provided CatalogApplicationProvider
+func (t *ApplicationProviderSpec) FromCatalogApplicationProvider(v CatalogApplicationProvider) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCatalogApplicationProvider performs a merge with any union data inside the ApplicationProviderSpec, using the provided CatalogApplicationProvider
+func (t *ApplicationProviderSpec) MergeCatalogApplicationProvider(v CatalogApplicationProvider) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err

@@ -684,6 +684,8 @@ func validateAppProvider(app ApplicationProviderSpec, appType ApplicationProvide
 			errs = append(errs, fmt.Errorf("image reference cannot be empty when application name is not provided"))
 		}
 		errs = append(errs, validation.ValidateOciImageReference(&provider.Image, "spec.applications[].image")...)
+	case CatalogApplicationProviderType:
+		// FIXME: validate catalog application provider
 	default:
 		errs = append(errs, fmt.Errorf("no validations implemented for application provider type: %s", appType))
 	}
@@ -699,6 +701,8 @@ func validateAppProviderType(app ApplicationProviderSpec) (ApplicationProviderTy
 
 	switch providerType {
 	case ImageApplicationProviderType:
+		return providerType, nil
+	case CatalogApplicationProviderType:
 		return providerType, nil
 	default:
 		return "", fmt.Errorf("unknown application provider type: %s", providerType)
@@ -719,6 +723,21 @@ func getAppName(app ApplicationProviderSpec, appType ApplicationProviderType) (s
 				return "", fmt.Errorf("provider image cannot be empty when application name is not provided")
 			}
 			return provider.Image, nil
+		}
+
+		return *app.Name, nil
+	case CatalogApplicationProviderType:
+		provider, err := app.AsCatalogApplicationProvider()
+		if err != nil {
+			return "", fmt.Errorf("invalid catalog application provider: %w", err)
+		}
+
+		// default name to provider image if not provided
+		if app.Name == nil {
+			if provider.Package == "" {
+				return "", fmt.Errorf("provider name cannot be empty when application name is not provided")
+			}
+			return provider.Package, nil
 		}
 
 		return *app.Name, nil

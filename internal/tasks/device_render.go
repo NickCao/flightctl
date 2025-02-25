@@ -256,9 +256,35 @@ func renderApplication(_ context.Context, app *api.ApplicationProviderSpec) (*st
 	switch appType {
 	case api.ImageApplicationProviderType:
 		return renderImageApplicationProvider(app)
+	case api.CatalogApplicationProviderType:
+		return renderCatalogApplicationProvider(app)
 	default:
 		return nil, nil, fmt.Errorf("%w: unsupported application type: %q", ErrUnknownApplicationType, appType)
 	}
+}
+
+func renderCatalogApplicationProvider(app *api.ApplicationProviderSpec) (
+	*string,
+	*api.ApplicationProviderSpec,
+	error,
+) {
+	catalogProvider, err := app.AsCatalogApplicationProvider()
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: failed getting application as CatalogApplicationProvider: %w", ErrUnknownApplicationType, err)
+	}
+
+	appName := lo.FromPtr(app.Name)
+	renderedApp := api.ApplicationProviderSpec{
+		Name:    app.Name,
+		EnvVars: app.EnvVars,
+	}
+	if err := renderedApp.FromImageApplicationProvider(api.ImageApplicationProvider{
+		Image: catalogProvider.Source, // FIXME: resolve image from catalog
+	}); err != nil {
+		return &appName, nil, fmt.Errorf("failed rendering application %s: %w", appName, err)
+	}
+
+	return &appName, &renderedApp, nil
 }
 
 func renderImageApplicationProvider(app *api.ApplicationProviderSpec) (*string, *api.ApplicationProviderSpec, error) {

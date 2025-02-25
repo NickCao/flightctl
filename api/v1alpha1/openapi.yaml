@@ -3553,6 +3553,7 @@ components:
               description: The application name must be 1–253 characters long, start with a letter or number, and contain no whitespace.
         - oneOf:
             - $ref: '#/components/schemas/ImageApplicationProvider'
+            - $ref: '#/components/schemas/CatalogApplicationProvider'
             # extend application providers
     ImageApplicationProvider:
       type: object
@@ -3562,6 +3563,22 @@ components:
           description: Reference to the container image for the application package.
       required:
         - image
+    CatalogApplicationProvider:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Reference to the catalog for the application package.
+        package:
+          type: string
+          description: Reference to the name for the application package.
+        channel:
+          type: string
+          description: Reference to the channel for the application package.
+      required:
+        - source
+        - package
+        - channel
     ApplicationEnvVars:
       type: object
       properties:

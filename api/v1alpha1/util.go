@@ -38,7 +38,8 @@ const (
 type ApplicationProviderType string
 
 const (
-	ImageApplicationProviderType ApplicationProviderType = "image"
+	ImageApplicationProviderType   ApplicationProviderType = "image"
+	CatalogApplicationProviderType ApplicationProviderType = "source"
 )
 
 // Type returns the type of the action.
@@ -118,6 +119,10 @@ func getApplicationType(union json.RawMessage) (ApplicationProviderType, error) 
 
 	if _, exists := data[ImageApplicationProviderType]; exists {
 		return ImageApplicationProviderType, nil
+	}
+
+	if _, exists := data[CatalogApplicationProviderType]; exists {
+		return CatalogApplicationProviderType, nil
 	}
 
 	return "", fmt.Errorf("unable to determine application provider type: %+v", data)
@@ -224,6 +229,16 @@ func applicationsAreEqual(c1, c2 *[]ApplicationProviderSpec) bool {
 				return false
 			}
 			return reflect.DeepEqual(imageSpec1, imageSpec2)
+		case CatalogApplicationProviderType:
+			catalogSpec1, err := item1.AsCatalogApplicationProvider()
+			if err != nil {
+				return false
+			}
+			catalogSpec2, err := item2.AsCatalogApplicationProvider()
+			if err != nil {
+				return false
+			}
+			return reflect.DeepEqual(catalogSpec1, catalogSpec2)
 		default:
 			return false
 		}

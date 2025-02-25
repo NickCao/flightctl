@@ -288,6 +288,13 @@ func (f FleetRolloutsLogic) getDeviceApps(device *api.Device, templateVersion *a
 				continue
 			}
 			deviceApps = append(deviceApps, *newApp)
+		case api.CatalogApplicationProviderType:
+			newApp, err := f.replaceEnvVarValueParameters(device, app)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("failed replacing parameters for app %d: %w", appIndex, err))
+				continue
+			}
+			deviceApps = append(deviceApps, *newApp)
 		default:
 			errs = append(errs, fmt.Errorf("unsupported type for app %d: %s", appIndex, appType))
 		}
